@@ -60,6 +60,15 @@ elif HW_SENSORS == "LHM":
             sys.exit(0)
         except:
             os._exit(0)
+elif HW_SENSORS == "AIDA64":
+    if platform.system() == 'Windows':
+        import library.sensors.sensors_aida64 as sensors
+    else:
+        logger.error("AIDA64 integration is only available on Windows")
+        try:
+            sys.exit(0)
+        except:
+            os._exit(0)
 elif HW_SENSORS == "STUB":
     logger.warning("Stub sensors, not real HW sensors")
     import library.sensors.sensors_stub_random as sensors
@@ -79,6 +88,43 @@ else:
         os._exit(0)
 
 import library.sensors.sensors_custom as sensors_custom
+
+
+def format_significant_figures(value, sig_figs=3, width=0):
+    """
+    格式化数值为指定的有效数字位数，并可指定最小宽度
+    
+    Args:
+        value: 要格式化的数值
+        sig_figs: 有效数字位数，默认为3
+        width: 最小宽度，如果格式化后的字符串长度小于此值，则在左侧填充空格
+    
+    Returns:
+        格式化后的字符串
+    """
+    if value is None or math.isnan(value) or math.isinf(value):
+        formatted_value = "N/A"
+    elif value == 0:
+        formatted_value = "0.00"
+    else:
+        # 计算需要的小数位数
+        magnitude = math.floor(math.log10(abs(value)))
+        decimal_places = sig_figs - magnitude - 1
+        
+        # 确保小数位数不为负数
+        decimal_places = max(0, decimal_places)
+        
+        # 格式化数值
+        format_str = f"{{:.{decimal_places}f}}"
+        formatted_value = format_str.format(value)
+
+    if width > 0:
+        formatted_value = formatted_value.rjust(width)
+    
+    # 如果指定了宽度，则填充空格
+    if width > 0:
+        return formatted_value.ljust(width)
+    return formatted_value
 
 
 def get_theme_file_path(name):
@@ -257,10 +303,12 @@ def last_values_list(size: int) -> List[float]:
 
 class CPU:
     last_values_cpu_percentage = []
+    last_values_cpu_frequency = []
     last_values_cpu_temperature = []
     last_values_cpu_fan_speed = []
-    last_values_cpu_frequency = []
-
+    last_values_cpu_voltage = []  # 新增：CPU电压历史数据
+    last_values_cpu_power = []    # 新增：CPU功耗历史数据
+    
     @classmethod
     def percentage(cls):
         theme_data = config.THEME_DATA['STATS']['CPU']['PERCENTAGE']
@@ -370,6 +418,60 @@ class CPU:
         display_themed_percent_radial_bar(cpu_fan_radial_data, fan_percent)
         display_themed_line_graph(cpu_fan_line_graph_data, cls.last_values_cpu_fan_speed)
 
+    @classmethod
+    def voltage(cls):
+        voltage = sensors.Cpu.voltage()
+        save_last_value(voltage, cls.last_values_cpu_voltage,
+                        config.THEME_DATA['STATS']['CPU']['VOLTAGE']['LINE_GRAPH'].get("HISTORY_SIZE",
+                                                                                     DEFAULT_HISTORY_SIZE))
+
+        cpu_voltage_text_data = config.THEME_DATA['STATS']['CPU']['VOLTAGE']['TEXT']
+        cpu_voltage_radial_data = config.THEME_DATA['STATS']['CPU']['VOLTAGE']['RADIAL']
+        cpu_voltage_graph_data = config.THEME_DATA['STATS']['CPU']['VOLTAGE']['GRAPH']
+        cpu_voltage_line_graph_data = config.THEME_DATA['STATS']['CPU']['VOLTAGE']['LINE_GRAPH']
+
+        if math.isnan(voltage):
+            voltage = 0
+            if cpu_voltage_text_data['SHOW'] or cpu_voltage_radial_data['SHOW'] or cpu_voltage_graph_data[
+                'SHOW'] or cpu_voltage_line_graph_data['SHOW']:
+                logger.warning("Your CPU voltage is not supported yet")
+                cpu_voltage_text_data['SHOW'] = False
+                cpu_voltage_radial_data['SHOW'] = False
+                cpu_voltage_graph_data['SHOW'] = False
+                cpu_voltage_line_graph_data['SHOW'] = False
+
+        display_themed_value(cpu_voltage_text_data, format_significant_figures(voltage, 3, width=5), 4, " V")
+        display_themed_progress_bar(cpu_voltage_graph_data, voltage)
+        display_themed_radial_bar(cpu_voltage_radial_data, format_significant_figures(voltage, 3, width=5), 4, " V")
+        display_themed_line_graph(cpu_voltage_line_graph_data, cls.last_values_cpu_voltage)
+
+    @classmethod
+    def power(cls):
+        power = sensors.Cpu.power()
+        save_last_value(power, cls.last_values_cpu_power,
+                        config.THEME_DATA['STATS']['CPU']['POWER']['LINE_GRAPH'].get("HISTORY_SIZE",
+                                                                                   DEFAULT_HISTORY_SIZE))
+
+        cpu_power_text_data = config.THEME_DATA['STATS']['CPU']['POWER']['TEXT']
+        cpu_power_radial_data = config.THEME_DATA['STATS']['CPU']['POWER']['RADIAL']
+        cpu_power_graph_data = config.THEME_DATA['STATS']['CPU']['POWER']['GRAPH']
+        cpu_power_line_graph_data = config.THEME_DATA['STATS']['CPU']['POWER']['LINE_GRAPH']
+
+        if math.isnan(power):
+            power = 0
+            if cpu_power_text_data['SHOW'] or cpu_power_radial_data['SHOW'] or cpu_power_graph_data[
+                'SHOW'] or cpu_power_line_graph_data['SHOW']:
+                logger.warning("Your CPU power is not supported yet")
+                cpu_power_text_data['SHOW'] = False
+                cpu_power_radial_data['SHOW'] = False
+                cpu_power_graph_data['SHOW'] = False
+                cpu_power_line_graph_data['SHOW'] = False
+
+        display_themed_value(cpu_power_text_data, format_significant_figures(power, 3, width=5), 4, " W")
+        display_themed_progress_bar(cpu_power_graph_data, power)
+        display_themed_radial_bar(cpu_power_radial_data, format_significant_figures(power, 3, width=5), 4, " W")
+        display_themed_line_graph(cpu_power_line_graph_data, cls.last_values_cpu_power)
+
 
 class Gpu:
     last_values_gpu_percentage = []
@@ -378,6 +480,8 @@ class Gpu:
     last_values_gpu_fps = []
     last_values_gpu_fan_speed = []
     last_values_gpu_frequency = []
+    last_values_gpu_voltage = []  # 新增：GPU电压历史数据
+    last_values_gpu_power = []    # 新增：GPU功耗历史数据
 
     @classmethod
     def stats(cls):
@@ -385,6 +489,8 @@ class Gpu:
         fps = sensors.Gpu.fps()
         fan_percent = sensors.Gpu.fan_percent()
         freq_ghz = sensors.Gpu.frequency() / 1000
+        voltage = sensors.Gpu.voltage()  # 新增：获取GPU电压
+        power = sensors.Gpu.power()      # 新增：获取GPU功耗
 
         theme_gpu_data = config.THEME_DATA['STATS']['GPU']
 
@@ -400,6 +506,10 @@ class Gpu:
                         theme_gpu_data['FAN_SPEED']['LINE_GRAPH'].get("HISTORY_SIZE", DEFAULT_HISTORY_SIZE))
         save_last_value(freq_ghz, cls.last_values_gpu_frequency,
                         theme_gpu_data['FREQUENCY']['LINE_GRAPH'].get("HISTORY_SIZE", DEFAULT_HISTORY_SIZE))
+        save_last_value(voltage, cls.last_values_gpu_voltage,
+                        theme_gpu_data['VOLTAGE']['LINE_GRAPH'].get("HISTORY_SIZE", DEFAULT_HISTORY_SIZE))
+        save_last_value(power, cls.last_values_gpu_power,
+                        theme_gpu_data['POWER']['LINE_GRAPH'].get("HISTORY_SIZE", DEFAULT_HISTORY_SIZE))
 
         ################################ for backward compatibility only
         gpu_mem_graph_data = theme_gpu_data['MEMORY']['GRAPH']
@@ -591,6 +701,86 @@ class Gpu:
             min_size=4
         )
         display_themed_line_graph(gpu_freq_line_graph_data, cls.last_values_gpu_frequency)
+
+        # GPU Voltage (V)
+        gpu_voltage_text_data = theme_gpu_data['VOLTAGE']['TEXT']
+        gpu_voltage_radial_data = theme_gpu_data['VOLTAGE']['RADIAL']
+        gpu_voltage_graph_data = theme_gpu_data['VOLTAGE']['GRAPH']
+        gpu_voltage_line_graph_data = theme_gpu_data['VOLTAGE']['LINE_GRAPH']
+
+        if math.isnan(voltage):
+            voltage = 0
+            if gpu_voltage_text_data['SHOW'] or gpu_voltage_radial_data['SHOW'] or gpu_voltage_graph_data[
+                'SHOW'] or gpu_voltage_line_graph_data['SHOW']:
+                logger.warning("Your GPU voltage is not supported yet")
+                gpu_voltage_text_data['SHOW'] = False
+                gpu_voltage_radial_data['SHOW'] = False
+                gpu_voltage_graph_data['SHOW'] = False
+                gpu_voltage_line_graph_data['SHOW'] = False
+
+        display_themed_value(
+            theme_data=gpu_voltage_text_data,
+            value=format_significant_figures(voltage, 3, width=5),
+            unit=" V",
+            min_size=4
+        )
+        display_themed_progress_bar(gpu_voltage_graph_data, voltage)
+        display_themed_radial_bar(
+            theme_data=gpu_voltage_radial_data,
+            value=format_significant_figures(voltage, 3),
+            unit=" V",
+            min_size=4
+        )
+        display_themed_line_graph(gpu_voltage_line_graph_data, cls.last_values_gpu_voltage)
+
+        # GPU Power (W)
+        gpu_power_text_data = theme_gpu_data['POWER']['TEXT']
+        gpu_power_radial_data = theme_gpu_data['POWER']['RADIAL']
+        gpu_power_graph_data = theme_gpu_data['POWER']['GRAPH']
+        gpu_power_line_graph_data = theme_gpu_data['POWER']['LINE_GRAPH']
+
+        if math.isnan(power):
+            power = 0
+            if gpu_power_text_data['SHOW'] or gpu_power_radial_data['SHOW'] or gpu_power_graph_data[
+                'SHOW'] or gpu_power_line_graph_data['SHOW']:
+                logger.warning("Your GPU power is not supported yet")
+                gpu_power_text_data['SHOW'] = False
+                gpu_power_radial_data['SHOW'] = False
+                gpu_power_graph_data['SHOW'] = False
+                gpu_power_line_graph_data['SHOW'] = False
+
+        display_themed_value(
+            theme_data=gpu_power_text_data,
+            value=format_significant_figures(power, 3, width=5),
+            unit=" W",
+            min_size=4
+        )
+        display_themed_progress_bar(gpu_power_graph_data, power)
+        display_themed_radial_bar(
+            theme_data=gpu_power_radial_data,
+            value=format_significant_figures(power, 3),
+            unit=" W",
+            min_size=4
+        )
+        display_themed_line_graph(gpu_power_line_graph_data, cls.last_values_gpu_power)
+
+    @classmethod
+    def voltage(cls):
+        """获取GPU电压"""
+        theme_data = config.THEME_DATA['STATS']['GPU']['VOLTAGE']
+        gpu_voltage = sensors.Gpu.voltage()
+        save_last_value(gpu_voltage, cls.last_values_gpu_voltage,
+                        theme_data['LINE_GRAPH'].get("HISTORY_SIZE", DEFAULT_HISTORY_SIZE))
+        return gpu_voltage
+
+    @classmethod
+    def power(cls):
+        """获取GPU功耗"""
+        theme_data = config.THEME_DATA['STATS']['GPU']['POWER']
+        gpu_power = sensors.Gpu.power()
+        save_last_value(gpu_power, cls.last_values_gpu_power,
+                        theme_data['LINE_GRAPH'].get("HISTORY_SIZE", DEFAULT_HISTORY_SIZE))
+        return gpu_power
 
     @staticmethod
     def is_available():

@@ -210,6 +210,24 @@ class Gpu(sensors.Gpu):
             return math.nan
 
     @staticmethod
+    def voltage() -> float:
+        if DETECTED_GPU == GpuType.AMD:
+            return GpuAmd.voltage()
+        elif DETECTED_GPU == GpuType.NVIDIA:
+            return GpuNvidia.voltage()
+        else:
+            return math.nan
+
+    @staticmethod
+    def power() -> float:
+        if DETECTED_GPU == GpuType.AMD:
+            return GpuAmd.power()
+        elif DETECTED_GPU == GpuType.NVIDIA:
+            return GpuNvidia.power()
+        else:
+            return math.nan
+
+    @staticmethod
     def is_available() -> bool:
         global DETECTED_GPU
         # Always use Nvidia GPU if available
@@ -290,6 +308,16 @@ class GpuNvidia(sensors.Gpu):
     @staticmethod
     def frequency() -> float:
         # Not supported by Python libraries
+        return math.nan
+
+    @staticmethod
+    def voltage() -> float:
+        # Not supported by GPUtil library
+        return math.nan
+
+    @staticmethod
+    def power() -> float:
+        # Not supported by GPUtil library
         return math.nan
 
     @staticmethod
@@ -392,6 +420,16 @@ class GpuAmd(sensors.Gpu):
                 return math.nan
         except:
             return math.nan
+
+    @staticmethod
+    def voltage() -> float:
+        # Not supported by pyamdgpuinfo or pyadl libraries
+        return math.nan
+
+    @staticmethod
+    def power() -> float:
+        # Not supported by pyamdgpuinfo or pyadl libraries
+        return math.nan
 
     @staticmethod
     def is_available() -> bool:

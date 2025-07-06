@@ -217,6 +217,8 @@ if __name__ == "__main__":
     logger.info("Starting system monitoring")
     import library.stats as stats
 
+    scheduler.CPUVoltage(); time.sleep(0.25)
+    scheduler.CPUPower(); time.sleep(0.25)
     scheduler.CPUPercentage(); time.sleep(0.25)
     scheduler.CPUFrequency(); time.sleep(0.25)
     scheduler.CPULoad(); time.sleep(0.25)
@@ -224,6 +226,8 @@ if __name__ == "__main__":
     scheduler.CPUFanSpeed(); time.sleep(0.25)
     if stats.Gpu.is_available():
         scheduler.GpuStats(); time.sleep(0.25)
+        scheduler.GPUVoltage(); time.sleep(0.25)
+        scheduler.GPUPower(); time.sleep(0.25)
     scheduler.MemoryStats(); time.sleep(0.25)
     scheduler.DiskStats(); time.sleep(0.25)
     scheduler.NetStats(); time.sleep(0.25)

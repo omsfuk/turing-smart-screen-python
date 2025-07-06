@@ -102,6 +102,10 @@ def refresh_theme():
 
     # Display all data on screen once
     import library.stats as stats
+    if config.THEME_DATA['STATS']['CPU']['VOLTAGE'].get("INTERVAL", 0) > 0:
+        stats.CPU.voltage()
+    if config.THEME_DATA['STATS']['CPU']['POWER'].get("INTERVAL", 0) > 0:
+        stats.CPU.power()
     if config.THEME_DATA['STATS']['CPU']['PERCENTAGE'].get("INTERVAL", 0) > 0:
         stats.CPU.percentage()
     if config.THEME_DATA['STATS']['CPU']['FREQUENCY'].get("INTERVAL", 0) > 0:
@@ -114,6 +118,10 @@ def refresh_theme():
         stats.CPU.fan_speed()
     if config.THEME_DATA['STATS']['GPU'].get("INTERVAL", 0) > 0:
         stats.Gpu.stats()
+    if config.THEME_DATA['STATS']['GPU']['VOLTAGE'].get("INTERVAL", 0) > 0:
+        stats.Gpu.voltage()
+    if config.THEME_DATA['STATS']['GPU']['POWER'].get("INTERVAL", 0) > 0:
+        stats.Gpu.power()
     if config.THEME_DATA['STATS']['MEMORY'].get("INTERVAL", 0) > 0:
         stats.Memory.stats()
     if config.THEME_DATA['STATS']['DISK'].get("INTERVAL", 0) > 0:

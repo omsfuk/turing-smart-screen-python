@@ -183,6 +183,39 @@ def PingStats():
     stats.Ping.stats()
 
 
+@async_job("CPU_Voltage")
+@schedule(timedelta(seconds=config.THEME_DATA['STATS']['CPU']['VOLTAGE'].get("INTERVAL", 0)).total_seconds())
+def CPUVoltage():
+    interval = config.THEME_DATA['STATS']['CPU']['VOLTAGE']['INTERVAL']
+    if interval > 0:
+        stats.CPU.voltage()
+
+@async_job("CPU_Power")
+@schedule(timedelta(seconds=config.THEME_DATA['STATS']['CPU']['POWER'].get("INTERVAL", 0)).total_seconds())
+def CPUPower():
+    interval = config.THEME_DATA['STATS']['CPU']['POWER']['INTERVAL']
+    if interval > 0:
+        stats.CPU.power()
+
+
+@async_job("GPU_Voltage")
+@schedule(timedelta(seconds=config.THEME_DATA['STATS']['GPU']['VOLTAGE'].get("INTERVAL", 0)).total_seconds())
+def GPUVoltage():
+    """刷新GPU电压"""
+    interval = config.THEME_DATA['STATS']['GPU']['VOLTAGE']['INTERVAL']
+    if interval > 0:
+        stats.Gpu.voltage()
+
+
+@async_job("GPU_Power")
+@schedule(timedelta(seconds=config.THEME_DATA['STATS']['GPU']['POWER'].get("INTERVAL", 0)).total_seconds())
+def GPUPower():
+    """刷新GPU功耗"""
+    interval = config.THEME_DATA['STATS']['GPU']['POWER']['INTERVAL']
+    if interval > 0:
+        stats.Gpu.power()
+
+
 @async_job("Queue_Handler")
 @schedule(timedelta(milliseconds=1).total_seconds())
 def QueueHandler():

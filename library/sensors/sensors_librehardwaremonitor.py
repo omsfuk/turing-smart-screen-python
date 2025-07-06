@@ -197,7 +197,7 @@ class Cpu(sensors.Cpu):
 
             if frequencies:
                 # Take mean of all core clock as "CPU clock" (as it is done in Windows Task Manager Performance tab)
-                return mean(frequencies)
+                return max(frequencies)
         except:
             pass
 
@@ -236,6 +236,32 @@ class Cpu(sensors.Cpu):
         except:
             pass
 
+        return math.nan
+
+    @staticmethod
+    def voltage() -> float:
+        cpu = get_hw_and_update(Hardware.HardwareType.Cpu)
+        try:
+            for sensor in cpu.Sensors:
+                if sensor.SensorType == Hardware.SensorType.Voltage and "CPU Core" in str(sensor.Name) and sensor.Value is not None:
+                    return float(sensor.Value)
+        except:
+            pass
+
+        # 无法获取CPU电压
+        return math.nan
+
+    @staticmethod
+    def power() -> float:
+        cpu = get_hw_and_update(Hardware.HardwareType.Cpu)
+        try:
+            for sensor in cpu.Sensors:
+                if sensor.SensorType == Hardware.SensorType.Power and "CPU Package" in str(sensor.Name) and sensor.Value is not None:
+                    return float(sensor.Value)
+        except:
+            pass
+
+        # 无法获取CPU功耗
         return math.nan
 
     @staticmethod
@@ -368,6 +394,40 @@ class Gpu(sensors.Gpu):
             pass
 
         # No Frequency sensor for this GPU model
+        return math.nan
+
+    @classmethod
+    def voltage(cls) -> float:
+        gpu_to_use = cls.get_gpu_to_use()
+        if gpu_to_use is None:
+            # GPU not supported
+            return math.nan
+
+        try:
+            for sensor in gpu_to_use.Sensors:
+                if sensor.SensorType == Hardware.SensorType.Voltage and "GPU Core" in str(sensor.Name) and sensor.Value is not None:
+                    return float(sensor.Value)
+        except:
+            pass
+
+        # No Voltage sensor for this GPU model
+        return math.nan
+
+    @classmethod
+    def power(cls) -> float:
+        gpu_to_use = cls.get_gpu_to_use()
+        if gpu_to_use is None:
+            # GPU not supported
+            return math.nan
+
+        try:
+            for sensor in gpu_to_use.Sensors:
+                if sensor.SensorType == Hardware.SensorType.Power and ("GPU Package" in str(sensor.Name) or "GPU Power" in str(sensor.Name)) and sensor.Value is not None:
+                    return float(sensor.Value)
+        except:
+            pass
+
+        # No Power sensor for this GPU model
         return math.nan
 
     @classmethod

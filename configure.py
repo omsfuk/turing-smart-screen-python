@@ -98,7 +98,7 @@ model_and_size_to_revision_map = {
     (SIMULATED_MODEL, SIZE_5_INCH): 'SIMU',
     (SIMULATED_MODEL, SIZE_8_8_INCH): 'SIMU',
 }
-hw_lib_map = {"AUTO": "Automatic", "LHM": "LibreHardwareMonitor (admin.)", "PYTHON": "Python libraries",
+hw_lib_map = {"AUTO": "Automatic", "LHM": "LibreHardwareMonitor (admin.)", "AIDA64": "AIDA64 Shared Memory", "PYTHON": "Python libraries",
               "STUB": "Fake random data", "STATIC": "Fake static data"}
 reverse_map = {False: "classic", True: "reverse"}
 weather_unit_map = {"metric": "metric - °C", "imperial": "imperial - °F", "standard": "standard - °K"}
@@ -246,6 +246,7 @@ class TuringConfigWindow:
         self.hwlib_label.place(x=370, y=340)
         if sys.platform != "win32":
             del hw_lib_map["LHM"]  # LHM is for Windows platforms only
+            del hw_lib_map["AIDA64"]  # AIDA64 is for Windows platforms only
         self.hwlib_cb = ttk.Combobox(self.window, values=list(hw_lib_map.values()), state='readonly')
         self.hwlib_cb.place(x=550, y=335, width=250)
         self.hwlib_cb.bind('<<ComboboxSelected>>', self.on_hwlib_change)
@@ -519,7 +520,7 @@ class TuringConfigWindow:
         if sys.platform == "win32":
             import ctypes
             is_admin = ctypes.windll.shell32.IsUserAnAdmin() != 0
-            if (hwlib == "LHM" or hwlib == "AUTO") and not is_admin:
+            if (hwlib == "LHM" or hwlib == "AIDA64" or hwlib == "AUTO") and not is_admin:
                 self.lhm_admin_warning.place(x=370, y=460)
                 self.save_run_btn.state(["disabled"])
             else:

@@ -59,6 +59,14 @@ class Cpu(sensors.Cpu):
     def fan_percent(fan_name: str = None) -> float:
         return PERCENTAGE_SENSOR_VALUE
 
+    @staticmethod
+    def voltage() -> float:
+        return 1.2
+
+    @staticmethod
+    def power() -> float:
+        return 65.0
+
 
 class Gpu(sensors.Gpu):
     @staticmethod
@@ -81,6 +89,14 @@ class Gpu(sensors.Gpu):
     @staticmethod
     def frequency() -> float:
         return GPU_FREQ_MHZ
+
+    @staticmethod
+    def voltage() -> float:
+        return 1.1
+
+    @staticmethod
+    def power() -> float:
+        return 250.0
 
     @staticmethod
     def is_available() -> bool:

@@ -48,6 +48,16 @@ class Cpu(ABC):
     @abstractmethod
     def fan_percent(fan_name: str = None) -> float:
         pass
+        
+    @staticmethod
+    @abstractmethod
+    def voltage() -> float:  # 返回CPU电压，单位为V
+        pass
+        
+    @staticmethod
+    @abstractmethod
+    def power() -> float:  # 返回CPU功耗，单位为W
+        pass
 
 
 class Gpu(ABC):
@@ -70,6 +80,16 @@ class Gpu(ABC):
     @staticmethod
     @abstractmethod
     def frequency() -> float:
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def voltage() -> float:  # 返回GPU电压，单位为V
+        pass
+        
+    @staticmethod
+    @abstractmethod
+    def power() -> float:  # 返回GPU功耗，单位为W
         pass
 
     @staticmethod
